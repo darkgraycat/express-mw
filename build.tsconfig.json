@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "nodenext",
+    "rootDir": "./src",
+    "outDir": "./build",
+
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "removeComments": false,
+
+    "strict": false
+  },
+  "include": ["src/**/*"]
+}

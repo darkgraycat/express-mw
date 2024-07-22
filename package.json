@@ -1,0 +1,32 @@
+{
+    "name": "express-mw",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "tsc --project build.tsconfig.json"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/darkgraycat/express-mw.git"
+    },
+    "keywords": [
+        "express",
+        "middleware",
+        "builder"
+    ],
+    "author": "darkgraycat",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/darkgraycat/express-mw/issues"
+    },
+    "homepage": "https://github.com/darkgraycat/express-mw#readme",
+    "dependencies": {
+        "express": "^4.19.2"
+    },
+    "devDependencies": {
+        "@types/node": "^20.14.11",
+        "typescript": "^5.5.3"
+    }
+}
