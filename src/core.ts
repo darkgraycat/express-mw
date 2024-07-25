@@ -1,17 +1,36 @@
-import express, { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 
 export namespace Core {
-    export interface HttpError extends Error { message: any, status: number };
+    type Result<T> = T | Promise<T>
 
-    export type Context = { req: Request, res: Response };
+    export interface CoreError extends Error {
+        message: any,
+        status: number
+    };
 
-    export type Fn<I, O> = (data: I, ctx?: Context) => O | Promise<O>;
+    export interface Middleware {
+        (req: Request, res: Response, next: NextFunction): Result<void>;
+    }
 
-    export function mw<Input, Output>(fn: Fn<Input, Output>) {
-        return async (req: Request, res: Response, next: NextFunction) => {
+    export interface Context {
+        req: Request;
+        res: Response;
+        next: NextFunction;
+    }
+
+    export interface SplitFn<Input> {
+        (data: Input): string;
+    }
+
+    export interface Fn<Input, Output>{
+        (data: Input, ctx: Context): Result<Output>
+    }
+
+    export function mw<Input, Output>(fn: Fn<Input, Output>): Middleware {
+        return async (req, res, next) => {
             try {
                 const input = res.locals as Input;
-                const output = await fn(input, { req, res });
+                const output = await fn(input, { req, res, next });
                 res.locals = output;
                 next();
             } catch (error) {
@@ -22,9 +41,39 @@ export namespace Core {
         }
     }
 
-    export function error(message: any, code?: number): HttpError {
-        const error = new Error(message) as HttpError;
+    export function error(message: any, code?: number): CoreError {
+        const error = new Error(message) as CoreError;
         error.status = code || 500;
         return error;
+    }
+
+    export function split<Input>(
+        condition: SplitFn<Input>,
+        middlewares: Record<string, Core.Middleware[]>,
+    ): Middleware {
+        return async (req, res, next) => {
+            const input = res.locals as Input;
+            const key = condition(input);
+            const mws = middlewares[key];
+            await chain(mws, { req, res, next });
+            next();
+        }
+    }
+
+    export async function chain(
+        middlewares: Middleware[],
+        context: Context
+    ) {
+        const { req, res, next } = context;
+        let current = 0;
+
+        const nextFn = async (err?: Error | string) => {
+            if (err) return next(err);
+            if (current >= middlewares.length) return next();
+            const middleware = middlewares[current++];
+            await middleware(req, res, nextFn);
+        };
+
+        nextFn();
     }
 }
